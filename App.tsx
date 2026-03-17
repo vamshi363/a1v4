@@ -49,6 +49,14 @@ const App: React.FC = () => {
           <Route path="/compare" element={<ComparePage />} />
           <Route path="/courses" element={<CoursesExplorerPage />} />
           <Route path="/courses/:slug" element={<CoursePage />} />
+          <Route path="/quiz" element={
+            <div className="flex flex-col items-center justify-center min-h-[70vh] text-center p-8">
+               <div className="text-6xl mb-6">🧭</div>
+               <h1 className="text-3xl md:text-5xl font-black mb-4 font-heading">Career Discovery Quiz</h1>
+               <p className="text-slate-400 mb-8 max-w-md text-lg">Our AI-powered career quiz is coming soon. We're building something amazing for you!</p>
+               <div className="bg-blue-500/10 border border-blue-500/20 text-blue-400 px-6 py-3 rounded-2xl text-sm font-bold">🚀 Launching Soon</div>
+            </div>
+          } />
           <Route path="/careers/:slug" element={<CareerPage />} />
           <Route path="/skills/:slug" element={<SkillPage />} />
           <Route path="/roadmaps/:slug" element={<RoadmapPage />} />

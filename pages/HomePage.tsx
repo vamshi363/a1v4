@@ -1,478 +1,445 @@
-import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { GraduationCap, Award, ChevronRight, Building2, Compass, ArrowRight, Bell, CalendarClock, CheckCircle2, AlertTriangle, ShieldCheck, ExternalLink, BookOpen, BookMarked } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { motion, useInView } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { scholarships } from '../data/scholarships';
-import { exams } from '../data/exams';
+import { ArrowRight, Sparkles, BookOpen, GraduationCap, Compass, Trophy, Brain, Star, ChevronRight, Zap, Target, Map, Award, MessageCircle } from 'lucide-react';
 
-const HomePage: React.FC = () => {
-  // New State for Reminder Toast
-  const [showReminder, setShowReminder] = useState(false);
-  
-  const handleSetReminder = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setShowReminder(true);
-    setTimeout(() => setShowReminder(false), 3000);
-  };
-
-  // Filter exams for "Beyond EAMCET" section (Private Universities & Deemed)
-  const alternativeExams = useMemo(() => {
-    return exams.filter(e => e.category === 'Private Engineering' || e.category === 'Skill-Based');
-  }, []);
-
-  // AI-Driven: Calculate days left based on the Verified 'applicationEnd' field
-  const endingSoonExams = useMemo(() => {
-    const today = new Date();
-    
-    return exams
-      .filter(e => e.applicationEnd) // Only those with AI-detected dates
-      .map(e => {
-        const endDate = new Date(e.applicationEnd!);
-        const diffTime = endDate.getTime() - today.getTime();
-        const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return { ...e, daysLeft };
-      })
-      .filter(e => e.daysLeft >= 0 && e.daysLeft <= 30) // Only upcoming in 30 days
-      .sort((a, b) => a.daysLeft - b.daysLeft) // Urgent first
-      .slice(0, 5); // Limit to top 5
-  }, []);
-
-  const getBadgeColor = (days: number) => {
-    if (days <= 3) return 'bg-red-50 text-red-600 border-red-100 dark:bg-red-900/30 dark:text-red-400 dark:border-red-900';
-    if (days <= 10) return 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-900';
-    return 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700';
-  };
-
-  // Helper to format "last checked" time
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
-  };
-
-  // --- NEW HELPERS FOR EXAM CARDS ---
-  const getDeadlineBadge = (dateStr?: string) => {
-    if (!dateStr) return null;
-    const endDate = new Date(dateStr);
-    const today = new Date();
-    const diffTime = endDate.getTime() - today.getTime();
-    const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (days < 0) return null; // Expired
-    
-    if (days <= 3) return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-600 border border-red-100 mb-1">
-        Closes in {days} days
-      </span>
-    );
-    if (days <= 10) return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100 mb-1">
-        Closes in {days} days
-      </span>
-    );
-    return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200 mb-1">
-        Last date: {endDate.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
-      </span>
-    );
-  };
-
-  const getMicroGuidance = (category: string) => {
-    if (category === 'Private Engineering') return "Accepted by multiple private colleges";
-    if (category === 'Government') return "Best for low-fee government seats";
-    if (category === 'Management') return "Gateway to top MBA colleges";
-    if (category === 'Skill-Based') return "Direct entry based on skills";
-    return "Recommended for career growth";
-  };
+// ─── Animated Particle Background ───────────────────────────────────────────
+const ParticleField: React.FC = () => {
+  const particles = Array.from({ length: 30 }, (_, i) => ({
+    id: i,
+    left: `${Math.random() * 100}%`,
+    delay: `${Math.random() * 8}s`,
+    duration: `${8 + Math.random() * 12}s`,
+    size: `${2 + Math.random() * 3}px`,
+    opacity: 0.2 + Math.random() * 0.4,
+  }));
 
   return (
-    <div className="w-full relative">
-      {/* Toast Notification */}
-      <AnimatePresence>
-        {showReminder && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 0 }}
-            className="fixed top-20 left-0 right-0 mx-auto w-max z-50 bg-slate-900 text-white text-xs font-bold px-6 py-3 rounded-full shadow-xl flex items-center gap-2"
-          >
-            <CheckCircle2 size={16} className="text-primary-teal" />
-            Reminder set successfully
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          className="particle"
+          style={{
+            left: p.left,
+            bottom: '-10px',
+            width: p.size,
+            height: p.size,
+            animationDelay: p.delay,
+            animationDuration: p.duration,
+            opacity: p.opacity,
+          }}
+        />
+      ))}
+    </div>
+  );
+};
 
-      {/* Hero Section - Compacted for Mobile */}
-      <section className="relative bg-gradient-to-br from-primary-teal to-teal-700 py-6 md:py-16 px-4 overflow-hidden text-white">
-        <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-96 h-96 bg-secondary-purple/20 rounded-full blur-3xl"></div>
+// ─── Animated Counter ────────────────────────────────────────────────────────
+const AnimatedCounter: React.FC<{ target: number; suffix?: string; duration?: number }> = ({ target, suffix = '+', duration = 2000 }) => {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+  const isInView = useInView(ref, { once: true, margin: '-50px' });
+
+  useEffect(() => {
+    if (!isInView) return;
+    let start = 0;
+    const increment = target / (duration / 16);
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= target) {
+        setCount(target);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(start));
+      }
+    }, 16);
+    return () => clearInterval(timer);
+  }, [isInView, target, duration]);
+
+  return <span ref={ref}>{count}{suffix}</span>;
+};
+
+// ─── Data ────────────────────────────────────────────────────────────────────
+const stats = [
+  { label: 'Courses', value: 100, icon: <BookOpen size={18} /> },
+  { label: 'Careers', value: 50, icon: <Compass size={18} /> },
+  { label: 'Colleges', value: 200, icon: <GraduationCap size={18} /> },
+  { label: 'Scholarships', value: 50, icon: <Award size={18} /> },
+];
+
+const steps = [
+  { step: 1, title: 'Take Quiz', subtitle: '3 min', icon: <Target size={28} />, color: 'from-blue-500 to-blue-600' },
+  { step: 2, title: 'See Career Matches', subtitle: 'AI-Powered', icon: <Sparkles size={28} />, color: 'from-purple-500 to-purple-600' },
+  { step: 3, title: 'Explore Courses & Colleges', subtitle: 'Detailed Guides', icon: <BookOpen size={28} />, color: 'from-emerald-500 to-emerald-600' },
+  { step: 4, title: 'Find Scholarships & Exams', subtitle: 'Save Money', icon: <Trophy size={28} />, color: 'from-amber-500 to-amber-600' },
+  { step: 5, title: 'Get AI Guidance', subtitle: 'Personalized', icon: <Brain size={28} />, color: 'from-rose-500 to-rose-600' },
+];
+
+const careers = [
+  { name: 'Engineering', emoji: '⚙️', salary: '₹6L – ₹25L', demand: 'Very High', color: 'border-blue-500/30 hover:border-blue-500' },
+  { name: 'Medicine', emoji: '🩺', salary: '₹8L – ₹30L', demand: 'Very High', color: 'border-emerald-500/30 hover:border-emerald-500' },
+  { name: 'Design', emoji: '🎨', salary: '₹4L – ₹18L', demand: 'High', color: 'border-purple-500/30 hover:border-purple-500' },
+  { name: 'Law', emoji: '⚖️', salary: '₹5L – ₹20L', demand: 'High', color: 'border-amber-500/30 hover:border-amber-500' },
+  { name: 'Business', emoji: '📊', salary: '₹5L – ₹22L', demand: 'Very High', color: 'border-rose-500/30 hover:border-rose-500' },
+  { name: 'Arts', emoji: '🎭', salary: '₹3L – ₹15L', demand: 'Medium', color: 'border-cyan-500/30 hover:border-cyan-500' },
+];
+
+const testimonials = [
+  {
+    name: 'Priya Reddy',
+    college: 'JNTU Hyderabad',
+    text: `I was totally confused after Inter. The career quiz showed me that Data Science matched my interests perfectly. Now I'm in my 2nd year B.Tech CS and loving every bit of it!`,
+    avatar: '👩‍🎓',
+    rating: 5,
+  },
+  {
+    name: 'Arjun Kumar',
+    college: 'Osmania University',
+    text: `My parents wanted me to do Engineering but my heart was in design. After Inter helped me discover UI/UX Design as a career. The scholarship finder saved my family ₹2 Lakhs!`,
+    avatar: '👨‍💻',
+    rating: 5,
+  },
+  {
+    name: 'Sneha Sharma',
+    college: 'NALSAR Hyderabad',
+    text: `I never knew Law could be such a rewarding career until I took the quiz. The step-by-step roadmap and college recommendations were spot on. Highly recommend to all Inter students!`,
+    avatar: '👩‍⚖️',
+    rating: 5,
+  },
+];
+
+// ─── Stagger animation variants ─────────────────────────────────────────────
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+};
+
+// ─── Main Component ─────────────────────────────────────────────────────────
+const HomePage: React.FC = () => {
+  return (
+    <div className="w-full relative bg-navy">
+      
+      {/* ═══════════════ HERO SECTION ═══════════════ */}
+      <section className="relative min-h-[85vh] md:min-h-[90vh] flex items-center justify-center px-4 overflow-hidden"
+        style={{ background: 'linear-gradient(170deg, #0A0F1E 0%, #111827 50%, #0F172A 100%)' }}
+      >
+        <ParticleField />
         
-        <div className="max-w-7xl mx-auto relative z-10 text-center">
-          
-          <motion.h1 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="text-2xl md:text-5xl font-black mb-6 leading-tight"
+        {/* Decorative glows */}
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-amber-500/8 rounded-full blur-[100px] pointer-events-none" />
+
+        <div className="max-w-5xl mx-auto text-center relative z-10">
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest mb-8"
           >
-            Admissions in Telangana & Andhra <br className="hidden md:block" /> Made Simple.
+            <Zap size={14} /> Trusted by 10,000+ students
+          </motion.div>
+
+          {/* Headline */}
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.7 }}
+            className="font-heading text-4xl sm:text-5xl md:text-7xl font-black text-white leading-[1.1] mb-6"
+          >
+            Confused After Inter?{' '}
+            <br className="hidden sm:block" />
+            <span className="text-gradient">Find Your Perfect Career</span>
           </motion.h1>
 
-          <motion.div 
+          {/* Subheading */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="text-slate-400 text-base sm:text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
+          >
+            Discover careers based on your interests, skills & future demand.{' '}
+            <span className="text-slate-300 font-medium">Used by 10,000+ students in Telangana & AP</span>
+          </motion.p>
+
+          {/* CTA Button */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.7, type: 'spring', stiffness: 200 }}
+          >
+            <Link
+              to="/quiz"
+              className="glow-pulse inline-flex items-center gap-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 sm:px-10 py-4 sm:py-5 rounded-2xl font-heading font-black text-base sm:text-lg transition-all hover:scale-105 active:scale-95 shadow-[0_10px_40px_-10px_rgba(59,130,246,0.5)]"
+            >
+              Start Career Discovery Quiz
+              <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </motion.div>
+
+          {/* Trust line */}
+          <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="mb-4"
+            transition={{ delay: 1 }}
+            className="text-slate-600 text-xs mt-6 font-medium"
           >
-            <span className="text-base md:text-xl font-black text-white/90">You are here to find</span>
-          </motion.div>
-
-          {/* Big Bold Navigation Buttons */}
-          <motion.div 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="flex flex-row items-center justify-center gap-3 md:gap-5 w-full max-w-2xl mx-auto"
-          >
-             <Link 
-               to="/universities" 
-               className="w-full flex-1 bg-white text-teal-800 hover:bg-teal-50 px-3 md:px-6 py-3.5 rounded-2xl font-black text-sm md:text-xl uppercase tracking-wider transition-all shadow-[0_10px_30px_-10px_rgba(0,0,0,0.2)] hover:shadow-2xl hover:-translate-y-1 flex items-center justify-center gap-2 md:gap-3 border-2 border-transparent hover:border-teal-200"
-             >
-               <Building2 className="shrink-0 w-5 h-5 md:w-6 md:h-6" />
-               Universities
-             </Link>
-             <Link 
-               to="/scholarships" 
-               className="w-full flex-1 bg-secondary-purple hover:bg-purple-600 text-white px-3 md:px-6 py-3.5 rounded-2xl font-black text-sm md:text-xl uppercase tracking-wider transition-all shadow-[0_10px_30px_-10px_rgba(0,0,0,0.2)] hover:shadow-2xl hover:-translate-y-1 flex items-center justify-center gap-2 md:gap-3 border-2 border-transparent hover:border-purple-400"
-             >
-               <Award className="shrink-0 w-5 h-5 md:w-6 md:h-6" />
-               Scholarships
-             </Link>
-          </motion.div>
-
-          {/* NEW CTA for Exam Finder - Highlighted */}
-          <motion.div
-             initial={{ opacity: 0, y: 10 }}
-             animate={{ opacity: 1, y: 0 }}
-             transition={{ delay: 0.5 }}
-             className="mt-10 flex justify-center"
-          >
-             <Link to="/exam-finder" className="group relative inline-flex items-center gap-2 bg-gradient-to-r from-amber-300 to-yellow-400 text-amber-950 px-6 py-3.5 rounded-full text-sm md:text-base font-black shadow-[0_10px_30px_-10px_rgba(251,191,36,0.5)] hover:shadow-[0_10px_40px_-10px_rgba(251,191,36,0.7)] hover:scale-105 transition-all duration-300 border border-yellow-200/50">
-               <span className="absolute -top-2.5 -right-2 bg-white text-amber-600 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm border border-amber-100 animate-bounce">
-                  AI Tool
-               </span>
-               <div className="bg-white/30 p-1.5 rounded-full group-hover:bg-white/50 transition-colors">
-                  <Compass size={18} className="shrink-0" />
-               </div>
-               <span>Confused? Find the right exam for you</span>
-               <ChevronRight size={16} className="shrink-0 group-hover:translate-x-1 transition-transform" />
-             </Link>
-          </motion.div>
+            Free • No login required • Takes just 3 minutes
+          </motion.p>
         </div>
       </section>
 
-      {/* EXAMS BEYOND EAMCET SECTION (Moved Up) */}
-      <section className="py-12 bg-slate-50 dark:bg-slate-950 overflow-hidden border-b border-slate-100 dark:border-slate-800">
-         <div className="max-w-7xl mx-auto pl-4 pr-0 md:px-4">
-            <div className="flex justify-between items-end mb-6 pr-4">
-               <div>
-                  <h2 className="text-2xl md:text-3xl font-black mb-1">Exams Beyond EAMCET</h2>
-                  <p className="text-slate-500 text-sm font-medium">Top colleges also accept these entrance exams.</p>
-               </div>
-               <Link to="/exams" className="text-slate-400 hover:text-slate-600 font-bold text-xs flex items-center">
-                  View All <ChevronRight size={14} />
-               </Link>
-            </div>
-
-            <div className="overflow-x-auto no-scrollbar pb-8 -ml-4 pl-4 snap-x snap-mandatory">
-               <div className="flex gap-4 w-max">
-                  {alternativeExams.map((exam) => (
-                     <motion.div 
-                        key={exam.id}
-                        whileTap={{ scale: 0.98 }}
-                        className="snap-center w-72 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-[1.5rem] p-5 shadow-sm hover:shadow-lg transition-all flex flex-col justify-between"
-                     >
-                        <div>
-                           <div className="flex justify-between items-start mb-2">
-                              <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-slate-400">
-                                 <GraduationCap size={20} />
-                              </div>
-                              <div className="flex flex-col items-end">
-                                {getDeadlineBadge(exam.applicationEnd)}
-                                <span className="text-[10px] font-bold uppercase tracking-widest bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded text-slate-500">{exam.level} Exam</span>
-                              </div>
-                           </div>
-                           
-                           <h3 className="font-black text-lg leading-tight mb-1 truncate">{exam.name}</h3>
-                           <p className="text-xs text-slate-400 truncate mb-1">{exam.fullName}</p>
-                           
-                           {/* Micro Guidance */}
-                           <p className="text-[10px] text-slate-500 mb-3 font-medium bg-slate-50 dark:bg-slate-800/50 px-2 py-1 rounded w-fit">
-                              {getMicroGuidance(exam.category)}
-                           </p>
-                           
-                           <div className="mb-4">
-                              <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">Accepted By</div>
-                              <div className="flex flex-wrap gap-1">
-                                 {exam.colleges.slice(0, 2).map((col, i) => (
-                                    <span key={i} className="text-[10px] bg-slate-50 dark:bg-slate-700 px-2 py-1 rounded border dark:border-slate-600 text-slate-600 dark:text-slate-300 truncate max-w-[120px]">{col.split(' ')[0]}</span>
-                                 ))}
-                                 {exam.colleges.length > 2 && <span className="text-[10px] text-slate-400 flex items-center">+{exam.colleges.length - 2} more</span>}
-                              </div>
-                           </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 mt-2">
-                           <Link 
-                              to={`/exams/${exam.id}`}
-                              className="py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs text-center hover:opacity-90 transition-opacity shadow-sm"
-                           >
-                              View Exam Details
-                           </Link>
-                           <Link 
-                              to={`/universities?q=${encodeURIComponent(exam.name)}`}
-                              className="py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-xs text-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                           >
-                              View Colleges
-                           </Link>
-                        </div>
-                     </motion.div>
-                  ))}
-                  
-                  {/* Explore More Card */}
-                  <Link to="/exams" className="snap-center w-40 bg-slate-50 dark:bg-slate-800/50 rounded-[1.5rem] flex flex-col items-center justify-center text-center p-4 border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-primary-teal transition-colors group">
-                     <div className="w-12 h-12 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center mb-3 shadow-sm group-hover:scale-110 transition-transform">
-                        <ArrowRight size={20} className="text-slate-400 group-hover:text-primary-teal" />
-                     </div>
-                     <span className="font-bold text-sm text-slate-500 group-hover:text-primary-teal">Explore All Exams</span>
-                  </Link>
-               </div>
-            </div>
-         </div>
-      </section>
-
-      {/* NEW: COURSE EXPLORER QUICK ACCESS */}
-      <section className="py-12 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="bg-slate-900 rounded-[2.5rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary-teal/20 rounded-full blur-3xl -mr-20 -mt-20"></div>
-            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-              <div className="text-center md:text-left">
-                <div className="inline-flex items-center gap-2 bg-primary-teal/20 text-primary-teal px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-4 border border-primary-teal/20">
-                  <BookMarked size={12} /> New Section
+      {/* ═══════════════ STATS BAR ═══════════════ */}
+      <section className="relative z-10 -mt-10 px-4 mb-16">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-50px' }}
+          transition={{ duration: 0.6 }}
+          className="max-w-4xl mx-auto bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-6 md:p-8 shadow-2xl"
+        >
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 text-center">
+            {stats.map((stat, idx) => (
+              <div key={stat.label} className="flex flex-col items-center">
+                <div className="text-blue-400 mb-2">{stat.icon}</div>
+                <div className="font-heading text-3xl md:text-4xl font-black text-white">
+                  <AnimatedCounter target={stat.value} />
                 </div>
-                <h2 className="text-3xl md:text-4xl font-black mb-4 leading-tight">Pick the Right Course, <br/> Build Your Future.</h2>
-                <p className="text-slate-400 max-w-md mb-8 text-sm md:text-base">
-                  Detailed guides for 150+ courses including engineering, medical, and emerging technologies. Know the subjects, skills, and salaries.
-                </p>
-                <Link to="/courses" className="inline-flex items-center gap-2 bg-white text-slate-900 px-8 py-4 rounded-2xl font-black hover:bg-slate-100 transition-all shadow-lg active:scale-95">
-                  Browse Course Library <ArrowRight size={18} />
-                </Link>
-              </div>
-              <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
-                 {[
-                   { name: 'Engineering', count: '45+', color: 'text-primary-teal' },
-                   { name: 'Medical', count: '30+', color: 'text-red-400' },
-                   { name: 'Emerging Tech', count: '10+', color: 'text-blue-400' },
-                   { name: 'Creative', count: '20+', color: 'text-purple-400' },
-                 ].map((c) => (
-                   <div key={c.name} className="bg-white/5 border border-white/10 backdrop-blur-md p-4 rounded-2xl text-center">
-                     <div className={`text-xl font-black ${c.color}`}>{c.count}</div>
-                     <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider font-sans">{c.name}</div>
-                   </div>
-                 ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* NEW: EXAMS THAT END SOON SECTION (AI VERIFIED - Moved Down) */}
-      <section className="py-12 bg-white dark:bg-slate-900">
-        <div className="max-w-3xl mx-auto px-4">
-           {/* Section Header */}
-           <div className="flex justify-between items-end mb-6">
-              <div>
-                 <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-1 flex items-center gap-2">
-                    ⏰ Exams That End Soon
-                 </h2>
-                 <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                    AI-Verified deadlines from official sources.
-                 </p>
-              </div>
-              <Link to="/exams" className="text-xs font-bold text-primary-teal hover:text-teal-700 flex items-center gap-1 mb-1">
-                 View all exams <ArrowRight size={12} />
-              </Link>
-           </div>
-
-           {/* Vertical Card List */}
-           <div className="space-y-4">
-              {endingSoonExams.length > 0 ? (
-                 endingSoonExams.map((exam, idx) => (
-                   <motion.div 
-                      key={exam.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.1 }}
-                      className="bg-white dark:bg-slate-900 rounded-[1.25rem] p-5 shadow-sm border border-slate-200 dark:border-slate-800 relative overflow-hidden group"
-                   >
-                      <div className="flex justify-between items-start mb-3">
-                         <div>
-                            <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight">
-                               {exam.name}
-                            </h3>
-                            <div className="flex items-center gap-2 mt-1">
-                               {/* Verification Badge */}
-                               {exam.verificationStatus === 'Verified' ? (
-                                  <div className="flex items-center gap-1 text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800 px-2 py-0.5 rounded-full">
-                                     <ShieldCheck size={12} />
-                                     Verified {formatTimeAgo(exam.lastVerified)}
-                                  </div>
-                               ) : (
-                                  <div className="flex items-center gap-1 text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800 px-2 py-0.5 rounded-full">
-                                     <AlertTriangle size={12} />
-                                     Verification Pending
-                                  </div>
-                               )}
-                            </div>
-                         </div>
-                         
-                         {/* Countdown Badge */}
-                         <div className={`px-3 py-1.5 rounded-lg border flex items-center gap-1.5 ${getBadgeColor(exam.daysLeft)}`}>
-                            <CalendarClock size={14} />
-                            <span className="text-xs font-bold whitespace-nowrap">
-                               {exam.daysLeft} days left
-                            </span>
-                         </div>
-                      </div>
-
-                      <div className="flex items-center gap-3 mb-4 text-xs font-medium text-slate-500 dark:text-slate-400">
-                         <span className="bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300">
-                            {exam.category}
-                         </span>
-                         <span className="truncate max-w-[150px]">
-                            Deadline: {exam.applicationEnd}
-                         </span>
-                      </div>
-
-                      <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-3">
-                         <Link 
-                            to={`/exams/${exam.id}`} 
-                            className="flex-1 bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-3 rounded-xl text-sm font-bold text-center hover:opacity-90 transition-opacity"
-                         >
-                            View Exam
-                         </Link>
-                         <button 
-                            onClick={handleSetReminder}
-                            className="w-12 h-11 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-primary-teal hover:border-primary-teal hover:bg-teal-50 dark:hover:bg-slate-800 transition-all active:scale-95"
-                            aria-label="Set Reminder"
-                         >
-                            <Bell size={20} />
-                         </button>
-                      </div>
-                      
-                      {/* Source Link (Trust Factor) */}
-                      {exam.sourceUrl && (
-                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                           <a 
-                             href={exam.sourceUrl} 
-                             target="_blank" 
-                             rel="noopener noreferrer" 
-                             className="text-[10px] text-slate-400 hover:text-primary-teal flex items-center gap-1 bg-white dark:bg-slate-800 px-2 py-1 rounded-full shadow-sm border border-slate-100 dark:border-slate-700"
-                             title="Verify on official site"
-                           >
-                              Source <ExternalLink size={10} />
-                           </a>
-                        </div>
-                      )}
-                   </motion.div>
-                 ))
-              ) : (
-                <div className="text-center py-8 bg-white dark:bg-slate-900 rounded-[1.5rem] border border-dashed border-slate-200 dark:border-slate-800">
-                   <p className="text-slate-500 text-sm font-medium">No deadlines closing in the next 30 days.</p>
-                   <Link to="/exams" className="text-primary-teal font-bold text-xs mt-2 inline-block">View upcoming calendar</Link>
-                </div>
-              )}
-           </div>
-        </div>
-      </section>
-
-      {/* ADVERTISEMENT 2 */}
-      <div className="w-full bg-slate-50 dark:bg-slate-950 py-6 border-y border-slate-100 dark:border-slate-800">
-         <div className="max-w-4xl mx-auto px-4">
-            <div className="w-full h-28 bg-white dark:bg-slate-900 rounded-lg flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-sm">
-               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Sponsored Ad</span>
-            </div>
-         </div>
-      </div>
-
-      {/* Scholarships Section */}
-      <section className="py-12 bg-white dark:bg-slate-900">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex justify-between items-end mb-8">
-            <div>
-              <h2 className="text-2xl md:text-4xl font-black mb-2">Scholarships closing soon</h2>
-              <p className="text-slate-500 font-medium text-sm md:text-base">Don't miss the deadline for these official schemes.</p>
-            </div>
-            <Link to="/scholarships" className="text-secondary-purple font-black flex items-center hover:underline group text-xs md:text-base">
-              See All <ChevronRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {scholarships.slice(0, 2).map((scholar) => (
-              <div key={scholar.id} className="bg-slate-50 dark:bg-slate-800/50 p-6 md:p-10 rounded-[2rem] border border-slate-100 dark:border-slate-800 flex flex-col md:flex-row gap-6 hover:shadow-xl transition-all group">
-                <div className="bg-white dark:bg-slate-700 w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg border dark:border-slate-600 text-secondary-purple group-hover:scale-110 transition-transform">
-                  <Award size={28} />
-                </div>
-                <div className="flex-grow flex flex-col">
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="text-lg font-black group-hover:text-secondary-purple transition-colors leading-tight line-clamp-2">{scholar.name}</h3>
-                  </div>
-                  <span className={`self-start px-3 py-1 mb-4 rounded-full text-[10px] font-black uppercase tracking-widest ${scholar.type === 'State' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                      {scholar.type} Funding
-                  </span>
-                  <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mb-6 font-medium leading-relaxed">{scholar.eligibility.substring(0, 90)}...</p>
-                  <div className="flex items-center justify-between mt-auto">
-                    <div className="text-[10px] font-black text-red-500 uppercase tracking-widest">Ends: {scholar.deadline}</div>
-                    <Link to={`/scholarships/${scholar.id}`} className="text-secondary-purple font-black flex items-center text-xs uppercase tracking-widest hover:translate-x-1 transition-transform">
-                      Check Eligibility <ChevronRight size={16} className="ml-1" />
-                    </Link>
-                  </div>
-                </div>
+                <div className="text-slate-400 text-sm font-medium mt-1">{stat.label}</div>
               </div>
             ))}
           </div>
+        </motion.div>
+      </section>
+
+      {/* ═══════════════ HOW IT WORKS ═══════════════ */}
+      <section className="py-20 px-4">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <span className="text-xs font-bold uppercase tracking-[0.25em] text-amber-400 mb-4 block">How It Works</span>
+            <h2 className="font-heading text-3xl md:text-5xl font-black text-white">
+              Your Career Path in{' '}
+              <span className="text-gradient">5 Simple Steps</span>
+            </h2>
+          </motion.div>
+
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-50px' }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6"
+          >
+            {steps.map((step, idx) => (
+              <motion.div
+                key={step.step}
+                variants={itemVariants}
+                className="relative group"
+              >
+                <div className="glass-card rounded-3xl p-6 text-center hover:bg-white/10 transition-all duration-300 h-full flex flex-col items-center">
+                  {/* Step number */}
+                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+                    Step {step.step}
+                  </div>
+                  
+                  {/* Icon */}
+                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center text-white mb-5 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                    {step.icon}
+                  </div>
+
+                  {/* Title */}
+                  <h3 className="font-heading font-bold text-white text-lg mb-1">{step.title}</h3>
+                  <p className="text-slate-500 text-xs font-medium">{step.subtitle}</p>
+                </div>
+
+                {/* Connector arrow (hidden on mobile / last item) */}
+                {idx < steps.length - 1 && (
+                  <div className="hidden lg:block absolute top-1/2 -right-3 transform -translate-y-1/2 z-10">
+                    <ChevronRight size={16} className="text-slate-600" />
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
-      {/* ADVERTISEMENT 3 */}
-      <div className="max-w-7xl mx-auto px-4 mb-12">
-        <div className="w-full h-24 bg-slate-100 dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Advertisement</span>
-        </div>
-      </div>
+      {/* ═══════════════ FEATURED CAREERS ═══════════════ */}
+      <section className="py-20 px-4" style={{ background: 'linear-gradient(180deg, #0A0F1E, #111827)' }}>
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <span className="text-xs font-bold uppercase tracking-[0.25em] text-blue-400 mb-4 block">Popular Paths</span>
+            <h2 className="font-heading text-3xl md:text-5xl font-black text-white">
+              Explore <span className="text-gradient">Top Careers</span>
+            </h2>
+            <p className="text-slate-400 max-w-2xl mx-auto mt-4 text-sm md:text-base">
+              Data-driven insights on salary, demand, and growth for the most popular career paths after Intermediate.
+            </p>
+          </motion.div>
 
-      {/* Bottom CTA */}
-      <section className="py-12 px-4">
-        <div className="max-w-7xl mx-auto bg-primary-teal rounded-[2.5rem] p-8 md:p-16 relative overflow-hidden text-center text-white shadow-2xl">
-          <div className="relative z-10">
-            <h2 className="text-2xl md:text-5xl font-black mb-4">Start your journey with confidence.</h2>
-            <p className="text-base md:text-lg mb-8 opacity-90 max-w-2xl mx-auto font-medium">We gather data from verified government sources so you can make the right decision for your future.</p>
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-50px' }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            {careers.map((career) => (
+              <motion.div
+                key={career.name}
+                variants={itemVariants}
+                className={`glass-card rounded-3xl p-6 md:p-8 border-2 ${career.color} transition-all duration-300 hover:bg-white/5 group cursor-pointer`}
+              >
+                {/* Emoji + Name */}
+                <div className="flex items-center gap-4 mb-6">
+                  <span className="text-4xl group-hover:scale-125 transition-transform duration-300">{career.emoji}</span>
+                  <h3 className="font-heading text-xl md:text-2xl font-black text-white">{career.name}</h3>
+                </div>
+
+                {/* Stats */}
+                <div className="space-y-3 mb-6">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 text-sm">Avg Salary</span>
+                    <span className="text-white font-bold text-sm">{career.salary}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 text-sm">Demand</span>
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                      career.demand === 'Very High' 
+                        ? 'bg-emerald-500/20 text-emerald-400' 
+                        : career.demand === 'High'
+                        ? 'bg-blue-500/20 text-blue-400'
+                        : 'bg-amber-500/20 text-amber-400'
+                    }`}>
+                      {career.demand}
+                    </span>
+                  </div>
+                </div>
+
+                {/* CTA */}
+                <div className="flex items-center gap-2 text-blue-400 text-sm font-bold group-hover:text-blue-300 transition-colors">
+                  Explore {career.name} Careers <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ═══════════════ TESTIMONIALS ═══════════════ */}
+      <section className="py-20 px-4">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <span className="text-xs font-bold uppercase tracking-[0.25em] text-emerald-400 mb-4 block">Student Stories</span>
+            <h2 className="font-heading text-3xl md:text-5xl font-black text-white">
+              Hear From <span className="text-gradient">Real Students</span>
+            </h2>
+          </motion.div>
+
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-50px' }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          >
+            {testimonials.map((t) => (
+              <motion.div
+                key={t.name}
+                variants={itemVariants}
+                className="glass-card rounded-3xl p-6 md:p-8 hover:bg-white/5 transition-all duration-300"
+              >
+                {/* Stars */}
+                <div className="flex gap-1 mb-4">
+                  {Array.from({ length: t.rating }).map((_, i) => (
+                    <Star key={i} size={16} className="text-amber-400 fill-amber-400" />
+                  ))}
+                </div>
+
+                {/* Quote */}
+                <p className="text-slate-300 text-sm leading-relaxed mb-6 italic">
+                  "{t.text}"
+                </p>
+
+                {/* Author */}
+                <div className="flex items-center gap-3 border-t border-white/10 pt-4">
+                  <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-xl">
+                    {t.avatar}
+                  </div>
+                  <div>
+                    <div className="font-bold text-white text-sm">{t.name}</div>
+                    <div className="text-slate-500 text-xs">{t.college}</div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ═══════════════ BOTTOM CTA ═══════════════ */}
+      <section className="py-20 px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="max-w-4xl mx-auto relative overflow-hidden rounded-[2.5rem] shadow-2xl"
+          style={{ background: 'linear-gradient(135deg, #1E40AF 0%, #3B82F6 50%, #2563EB 100%)' }}
+        >
+          {/* Decorative shapes */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-400/20 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl" />
+
+          <div className="relative z-10 text-center p-10 md:p-16">
+            <h2 className="font-heading text-2xl md:text-5xl font-black text-white mb-4 leading-tight">
+              Ready to Find Your Path?
+            </h2>
+            <p className="text-blue-100 text-sm md:text-lg mb-8 max-w-xl mx-auto">
+              Take our free 3-minute Career Discovery Quiz and unlock personalized recommendations for your future.
+            </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-               <Link to="/universities" className="w-full sm:w-auto bg-white text-primary-teal px-8 py-4 rounded-2xl font-black text-lg hover:bg-slate-50 transition-all shadow-xl hover:-translate-y-1">
-                 Browse Colleges
-               </Link>
-               <Link to="/help" className="w-full sm:w-auto bg-teal-800 text-white px-8 py-4 rounded-2xl font-black text-lg hover:bg-teal-900 transition-all shadow-xl hover:-translate-y-1">
-                 Ask AI Advisor
-               </Link>
+              <Link
+                to="/quiz"
+                className="w-full sm:w-auto bg-white text-blue-600 px-8 py-4 rounded-2xl font-heading font-black text-lg hover:bg-slate-50 transition-all shadow-xl hover:-translate-y-1 hover:shadow-2xl active:scale-95 flex items-center justify-center gap-2"
+              >
+                <Sparkles size={20} /> Take the Quiz Now
+              </Link>
+              <Link
+                to="/courses"
+                className="w-full sm:w-auto bg-blue-800/50 text-white px-8 py-4 rounded-2xl font-heading font-bold text-lg hover:bg-blue-800/70 transition-all hover:-translate-y-1 border border-white/20 flex items-center justify-center gap-2"
+              >
+                <BookOpen size={20} /> Browse Courses
+              </Link>
             </div>
           </div>
-          {/* Decorative shapes */}
-          <div className="absolute top-0 left-0 w-64 h-64 bg-white/10 rounded-full -translate-x-1/2 -translate-y-1/2 blur-2xl"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/10 rounded-full translate-x-1/3 translate-y-1/3 blur-2xl"></div>
-        </div>
+        </motion.div>
       </section>
+
     </div>
   );
 };

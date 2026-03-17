@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>After Inter | Universities & Scholarships</title>
+    <title>After Inter | Find Your Perfect Career After 12th</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
         darkMode: 'class',
@@ -14,7 +14,25 @@
             colors: {
               slate: {
                 950: '#020617',
+              },
+              navy: {
+                DEFAULT: '#0A0F1E',
+                light: '#111827',
+                dark: '#060A14',
+              },
+              electric: {
+                DEFAULT: '#3B82F6',
+                light: '#60A5FA',
+                dark: '#2563EB',
+              },
+              accent: {
+                DEFAULT: '#F59E0B',
+                light: '#FBBF24',
+                dark: '#D97706',
               }
+            },
+            fontFamily: {
+              heading: ['Outfit', 'sans-serif'],
             }
           }
         }
@@ -24,12 +42,60 @@
         body {
             font-family: 'Inter', sans-serif;
         }
+        .font-heading {
+            font-family: 'Outfit', sans-serif;
+        }
         .bg-primary-teal { background-color: #00BFA6; }
         .text-primary-teal { color: #00BFA6; }
         .border-primary-teal { border-color: #00BFA6; }
         .bg-secondary-purple { background-color: #9C27B0; }
         .text-secondary-purple { color: #9C27B0; }
         
+        /* New homepage colors */
+        .bg-navy { background-color: #0A0F1E; }
+        .text-electric { color: #3B82F6; }
+        .bg-electric { background-color: #3B82F6; }
+        .text-accent-orange { color: #F59E0B; }
+        .bg-accent-orange { background-color: #F59E0B; }
+
+        /* Particle animation */
+        @keyframes float-particle {
+            0%, 100% { transform: translateY(0px) translateX(0px); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) translateX(20px); opacity: 0; }
+        }
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: rgba(59, 130, 246, 0.4);
+            border-radius: 50%;
+            animation: float-particle linear infinite;
+        }
+
+        /* Pulse glow for CTA */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.2); }
+        }
+        .glow-pulse { animation: pulse-glow 2s ease-in-out infinite; }
+
+        /* Gradient text */
+        .text-gradient {
+            background: linear-gradient(135deg, #3B82F6, #F59E0B);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Glassmorphism card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
         /* Utility for hiding scrollbar but allowing scroll */
         .no-scrollbar::-webkit-scrollbar {
             display: none;
