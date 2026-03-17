@@ -1,0 +1,7 @@
+{
+  "name": "After Inter",
+  "description": "A centralized education discovery platform for students from Telangana and Andhra Pradesh, featuring university search, scholarships, and admission tools.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
